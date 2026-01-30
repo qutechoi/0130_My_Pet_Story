@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { downloadImage } from '../services/geminiService';
 import { t } from '../i18n';
 
 function splitGridImage(gridImageSrc) {
@@ -38,11 +37,61 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
     }
   }, [gridImage]);
 
-  const handleDownloadGrid = () => {
-    if (gridImage) {
-      const filename = `pet-storyboard-${petName || 'pet'}.png`;
-      downloadImage(gridImage, filename);
+  const gridToBlob = async () => {
+    if (!gridImage) return null;
+    const res = await fetch(gridImage);
+    return await res.blob();
+  };
+
+  const handleDownloadGrid = async () => {
+    const blob = await gridToBlob();
+    if (!blob) return;
+    const filename = `pet-storyboard-${petName || 'pet'}.png`;
+
+    // 모바일: share API로 저장 유도, 데스크톱: 직접 다운로드
+    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+      try {
+        const file = new File([blob], filename, { type: 'image/png' });
+        await navigator.share({ files: [file] });
+      } catch (e) {
+        if (e.name !== 'AbortError') fallbackDownload(blob, filename);
+      }
+    } else {
+      fallbackDownload(blob, filename);
     }
+  };
+
+  const handleShare = async () => {
+    const blob = await gridToBlob();
+    if (!blob) return;
+    const filename = `pet-storyboard-${petName || 'pet'}.png`;
+
+    if (navigator.share) {
+      try {
+        const file = new File([blob], filename, { type: 'image/png' });
+        await navigator.share({
+          title: displayTitle,
+          text: displayTitle,
+          files: [file],
+        });
+      } catch (e) {
+        // 사용자가 취소한 경우 무시
+      }
+    } else {
+      // share API 미지원 시 다운로드로 대체
+      fallbackDownload(blob, filename);
+    }
+  };
+
+  const fallbackDownload = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   const heroImage = gridImage || originalImage;
@@ -127,7 +176,10 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
               <span className="material-symbols-outlined">download</span>
               <span>{t(lang, 'saveStory')}</span>
             </button>
-            <button className="w-14 flex items-center justify-center rounded-full h-14 bg-white/10 text-white border border-white/10">
+            <button
+              onClick={handleShare}
+              className="w-14 flex items-center justify-center rounded-full h-14 bg-white/10 text-white border border-white/10 cursor-pointer"
+            >
               <span className="material-symbols-outlined">share</span>
             </button>
           </div>
