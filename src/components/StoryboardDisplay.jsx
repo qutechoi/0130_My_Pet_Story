@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import FrameCard from './FrameCard';
 import { downloadImage } from '../services/geminiService';
 import { t } from '../i18n';
 
@@ -30,9 +29,8 @@ function splitGridImage(gridImageSrc) {
 }
 
 function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage, onReset, lang }) {
-  const { petName, frames } = storyboard;
+  const { storyTitle, petName, frames } = storyboard;
   const [frameImages, setFrameImages] = useState([]);
-  const [showFrames, setShowFrames] = useState(false);
 
   useEffect(() => {
     if (gridImage) {
@@ -47,12 +45,8 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
     }
   };
 
-  const storyParagraphs = frames.map((f) => f.dialogue).filter(Boolean);
   const heroImage = gridImage || originalImage;
-
-  const titleText = lang === 'ko'
-    ? `${petName || '반려동물'}${t(lang, 'storyOf')}`
-    : `${t(lang, 'storyOf')} ${petName || 'Your Pet'}`;
+  const displayTitle = storyTitle || (lang === 'ko' ? `${petName || '반려동물'}의 이야기` : `The Story of ${petName || 'Your Pet'}`);
 
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto bg-[#121212] text-white font-['Plus_Jakarta_Sans',sans-serif]">
@@ -73,6 +67,7 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto pb-48" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {/* Hero: 3x3 Grid Image */}
         {heroImage && (
           <div className="w-full">
             <div
@@ -80,65 +75,37 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
               style={{
                 backgroundImage: `linear-gradient(to bottom, rgba(18,18,18,0) 60%, rgba(18,18,18,1) 100%), url("${heroImage}")`,
               }}
-            >
-              <div className="px-6 pb-2 flex gap-3">
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-lg border border-white/20">
-                  <span className="material-symbols-outlined text-[16px] text-[#ee9d2b]">auto_stories</span>
-                  <span className="text-xs font-semibold text-white">{frames.length} {t(lang, 'frames')}</span>
-                </div>
-                {petName && (
-                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-lg border border-white/20">
-                    <span className="material-symbols-outlined text-[16px] text-[#ee9d2b]">pets</span>
-                    <span className="text-xs font-semibold text-white">{petName}</span>
-                  </div>
-                )}
-              </div>
-            </div>
+            />
           </div>
         )}
 
+        {/* Story Title */}
         <div className="px-6 pt-8">
-          <h1 className="text-white tracking-tight text-[32px] font-extrabold leading-tight mb-6">
-            {titleText}
+          <h1 className="text-white tracking-tight text-[28px] font-extrabold leading-tight mb-8">
+            {displayTitle}
           </h1>
-          <div className="space-y-6 text-slate-300 text-lg leading-relaxed font-normal">
-            {storyParagraphs.map((text, i) => (
-              <p key={i}>{text}</p>
-            ))}
-          </div>
         </div>
 
-        {gridImage && (
-          <div className="px-6 pt-10">
-            <h2 className="text-white text-xl font-bold mb-4 flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#ee9d2b]">grid_view</span>
-              {t(lang, 'storyboardGrid')}
-            </h2>
-            <img src={gridImage} alt="Pet storyboard grid" className="w-full rounded-2xl shadow-lg border border-white/10" />
-          </div>
-        )}
-
-        <div className="px-6 pt-8">
-          <button
-            onClick={() => setShowFrames(!showFrames)}
-            className="w-full flex items-center justify-between px-5 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold"
-          >
-            <span className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[#ee9d2b]">movie</span>
-              {t(lang, 'frameDetails')}
-            </span>
-            <span className="material-symbols-outlined transition-transform" style={{ transform: showFrames ? 'rotate(180deg)' : 'rotate(0deg)' }}>
-              expand_more
-            </span>
-          </button>
-
-          {showFrames && (
-            <div className="mt-4 space-y-4">
-              {frames.map((frame, index) => (
-                <FrameCard key={frame.frameNumber} frame={frame} frameImage={frameImages[index] || null} lang={lang} />
-              ))}
+        {/* Frame-by-frame story */}
+        <div className="px-6 space-y-8">
+          {frames.map((frame, index) => (
+            <div key={frame.frameNumber}>
+              {/* Frame Image */}
+              {frameImages[index] && (
+                <img
+                  src={frameImages[index]}
+                  alt={frame.title}
+                  className="w-full aspect-square object-cover rounded-2xl shadow-lg border border-white/10 mb-4"
+                />
+              )}
+              {/* Frame Story Text */}
+              {frame.dialogue && (
+                <p className="text-slate-300 text-base leading-relaxed">
+                  {frame.dialogue}
+                </p>
+              )}
             </div>
-          )}
+          ))}
         </div>
       </div>
 

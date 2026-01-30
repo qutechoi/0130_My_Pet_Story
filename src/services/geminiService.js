@@ -37,7 +37,7 @@ Frame 8: Profile silhouette with dramatic lighting
 Frame 9: Relaxed sleeping or resting`;
 
     const langInstruction = lang === 'ko'
-      ? `\n\nIMPORTANT: Write ALL text content (petName, title, visualDescription, action, dialogue, transition) in Korean (한국어). The entire response must be in Korean.`
+      ? `\n\nIMPORTANT: Write ALL text content (storyTitle, petName, title, visualDescription, action, dialogue, transition) in Korean (한국어). The entire response must be in Korean.`
       : `\n\nIMPORTANT: Write ALL text content in English.`;
 
     const prompt = `You are a professional pet photography storyboard expert.
@@ -45,17 +45,20 @@ Analyze the provided pet image and create an engaging 9-frame pet photography st
 
 Identify the animal's species, breed, fur markings, eye color, and distinctive features from the photo.
 
+Create a compelling story title that captures the narrative theme (e.g. "The Brave Adventure of Luna the Golden" or "베리의 은하계 대모험").
+
 Each frame must include:
 1. Frame number (1-9)
 2. Scene title (concise and impactful)
 3. Visual description (animal pose, background, lighting, camera angle)
 4. Action/movement (what is happening in the frame)
-5. Mood or narration (emotional tone of the scene)
+5. Mood or narration (2-3 sentences of narrative story text for this scene, written as a storybook paragraph)
 6. Transition effect (how to move to the next frame)
 ${storyContext}${langInstruction}
 
 Respond ONLY in the following JSON format (no other text):
 {
+  "storyTitle": "A compelling story title",
   "petName": "Animal description (e.g. Golden Retriever, Tabby Cat)",
   "frames": [
     {
@@ -63,7 +66,7 @@ Respond ONLY in the following JSON format (no other text):
       "title": "Scene title",
       "visualDescription": "Visual description",
       "action": "Action/movement",
-      "dialogue": "Mood or narration",
+      "dialogue": "Narrative story paragraph for this scene",
       "transition": "Transition effect"
     }
   ]
