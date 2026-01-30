@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Pet Story Home</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ee9d2b",
+                        "background-light": "#f8f7f6",
+                        "background-dark": "#221a10",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<nav class="sticky top-0 z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md px-4 py-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">pets</span>
+</div>
+<div>
+<h1 class="font-bold text-lg leading-tight">Pet Story AI</h1>
+<p class="text-xs opacity-60">Create magic today</p>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">notifications</span>
+</button>
+</nav>
+<!-- Main Content -->
+<main class="flex-1 px-4 pb-24">
+<!-- Welcome Header -->
+<header class="py-6">
+<h2 class="text-3xl font-bold tracking-tight">Hi, Sarah! 👋</h2>
+<p class="text-slate-500 dark:text-slate-400 mt-1">What adventure will Luna have today?</p>
+</header>
+<!-- 1. Upload Pet Photo Section -->
+<section class="mb-8">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+<span class="text-primary">1.</span> Upload Pet Photo
+            </h3>
+<div class="flex flex-col">
+<div class="flex flex-col items-center gap-6 rounded-xl border-2 border-dashed border-primary/30 dark:border-primary/20 bg-primary/5 dark:bg-primary/5 px-6 py-10 transition-colors hover:border-primary/50">
+<div class="flex flex-col items-center gap-2">
+<div class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mb-2">
+<span class="material-symbols-outlined text-primary text-3xl">add_a_photo</span>
+</div>
+<p class="text-lg font-bold text-center">Add Pet Photo</p>
+<p class="text-sm opacity-60 text-center max-w-[240px]">Tap to upload or drag a photo of your furry friend</p>
+</div>
+<button class="flex min-w-[140px] cursor-pointer items-center justify-center rounded-full h-12 px-6 bg-primary text-white text-sm font-bold shadow-lg shadow-primary/25 hover:scale-105 active:scale-95 transition-transform">
+<span>Select Image</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 2. Story Idea Section -->
+<section class="mb-8">
+<h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+<span class="text-primary">2.</span> Your Story Idea
+            </h3>
+<div class="space-y-4">
+<div class="relative">
+<textarea class="w-full bg-slate-200/50 dark:bg-white/5 border-none rounded-2xl p-4 text-base focus:ring-2 focus:ring-primary min-h-[120px] placeholder:text-slate-400" placeholder="e.g., My cat Luna becomes the captain of a starship and visits the Milk-y Way galaxy..."></textarea>
+</div>
+<!-- Quick Suggestion Chips -->
+<div class="flex flex-wrap gap-2">
+<button class="px-4 py-2 rounded-full bg-slate-200 dark:bg-white/5 text-xs font-semibold hover:bg-primary/20 hover:text-primary transition-colors border border-transparent hover:border-primary/30">🚀 Space Adventure</button>
+<button class="px-4 py-2 rounded-full bg-slate-200 dark:bg-white/5 text-xs font-semibold hover:bg-primary/20 hover:text-primary transition-colors border border-transparent hover:border-primary/30">🏰 Medieval Kingdom</button>
+<button class="px-4 py-2 rounded-full bg-slate-200 dark:bg-white/5 text-xs font-semibold hover:bg-primary/20 hover:text-primary transition-colors border border-transparent hover:border-primary/30">🌊 Undersea Quest</button>
+</div>
+</div>
+</section>
+<!-- Generate Button -->
+<div class="mb-12">
+<button class="w-full h-16 bg-primary text-white rounded-full font-bold text-lg flex items-center justify-center gap-3 shadow-xl shadow-primary/30 hover:brightness-110 active:scale-[0.98] transition-all">
+<span class="material-symbols-outlined">auto_fix_high</span>
+                Generate Magic Story
+            </button>
+</div>
+<!-- Recent Creations Section -->
+<section class="pb-10">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-lg font-bold">Recent Creations</h3>
+<button class="text-primary text-sm font-bold">View All</button>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Story Card 1 -->
+<div class="bg-slate-100 dark:bg-white/5 p-4 rounded-2xl flex items-center gap-4 group cursor-pointer border border-transparent hover:border-primary/20 transition-all">
+<div class="relative size-16 shrink-0">
+<div class="size-16 rounded-2xl bg-cover bg-center overflow-hidden border-2 border-white dark:border-slate-800 shadow-md" data-alt="Profile photo of a cute ginger cat" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBkrMKU4-LQt1_n7hVHYMvVp7KLhAH4gn-g8hGScv2KJk1P98K-IYZaOVKwz7oJ7jz6aXCcoM9df9Mnuc3OcYMh5nowk2SD-xs4caAdu2gnHrOompSKaZLJWCQ6xodwXPvR7a6RCWJmekQsUdhMmeGbAltiShK-HTOm2ZtU6qi52VnsfVZFOVllHTXgtIK4hCqI5lLN_j_moHdM01L8R6BbteSLHgxcE02uFgS67XZqdulscIhp7C5cJkywzAswCLre2tRSkLul2iM');"></div>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="font-bold text-base truncate uppercase tracking-tight">The Galactic Pounce</h4>
+<p class="text-xs opacity-60 mt-0.5">Luna's journey to the stars</p>
+</div>
+<button class="size-10 rounded-full bg-white dark:bg-white/10 flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined">arrow_forward_ios</span>
+</button>
+</div>
+<!-- Story Card 2 -->
+<div class="bg-slate-100 dark:bg-white/5 p-4 rounded-2xl flex items-center gap-4 group cursor-pointer border border-transparent hover:border-primary/20 transition-all">
+<div class="relative size-16 shrink-0">
+<div class="size-16 rounded-2xl bg-cover bg-center overflow-hidden border-2 border-white dark:border-slate-800 shadow-md" data-alt="Portrait of a smiling golden retriever" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD0ikH2gIA11U7zk3pOY1mpFwjJT4zkM8BBr0W2jx5uXYezmvvlJH-oIHD-k1lEEGcQfOdraS5LKUx_4iwQwo98t2pEHn--pmGf1gAOQeNJ8MVzj1SrRralOPu5LbZqhbOm4IpA2SKTzRFma6LV1tx9AYBsE76S9-vswSA79W2I0UsthD2mUPbEhsruzy7lkbyZeODMl72-xszutwarf_PmMdVVIq3qwepcK9FAMrX7Qi-0fJVKp_FzCrG7NKkhBI-yOgNpPYNkj9M');"></div>
+</div>
+<div class="flex-1 min-w-0">
+<h4 class="font-bold text-base truncate uppercase tracking-tight">The Treat Detective</h4>
+<p class="text-xs opacity-60 mt-0.5">Cooper finds the hidden bone</p>
+</div>
+<button class="size-10 rounded-full bg-white dark:bg-white/10 flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined">arrow_forward_ios</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<div class="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-background-light dark:bg-background-dark/90 backdrop-blur-xl border-t border-slate-200 dark:border-white/5">
+<div class="max-w-md mx-auto flex justify-around items-center">
+<button class="flex flex-col items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[28px] fill-[1]">home</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[28px]">auto_stories</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Library</span>
+</button>
+<button class="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[28px]">explore</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Feed</span>
+</button>
+<button class="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[28px]">person</span>
+<span class="text-[10px] font-bold uppercase tracking-wider">Profile</span>
+</button>
+</div>
+</div>
+</body></html>
