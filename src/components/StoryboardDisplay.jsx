@@ -41,13 +41,32 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
   }, [gridImage]);
 
   const captureContent = async () => {
-    if (!contentRef.current) return null;
-    const canvas = await html2canvas(contentRef.current, {
-      backgroundColor: '#121212',
-      scale: 2,
-      useCORS: true,
-    });
-    return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const el = contentRef.current;
+    if (!el) return null;
+
+    // 캡처 전: overflow 해제, 전체 높이 펼치기
+    const prevOverflow = el.style.overflow;
+    const prevHeight = el.style.height;
+    const prevMaxHeight = el.style.maxHeight;
+    el.style.overflow = 'visible';
+    el.style.height = 'auto';
+    el.style.maxHeight = 'none';
+
+    try {
+      const canvas = await html2canvas(el, {
+        backgroundColor: '#121212',
+        scale: 2,
+        useCORS: true,
+        scrollY: 0,
+        windowHeight: el.scrollHeight,
+      });
+      return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    } finally {
+      // 원래 스타일 복원
+      el.style.overflow = prevOverflow;
+      el.style.height = prevHeight;
+      el.style.maxHeight = prevMaxHeight;
+    }
   };
 
   const fallbackDownload = (blob, filename) => {
@@ -133,12 +152,15 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
       <div ref={contentRef} className="flex-1 overflow-y-auto pb-48" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {/* Hero: 3x3 Grid Image */}
         {heroImage && (
-          <div className="w-full">
+          <div className="relative w-full aspect-[4/5]">
+            <img
+              src={heroImage}
+              alt="Storyboard grid"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
             <div
-              className="relative w-full aspect-[4/5] bg-center bg-no-repeat bg-cover flex flex-col justify-end"
-              style={{
-                backgroundImage: `linear-gradient(to bottom, rgba(18,18,18,0) 60%, rgba(18,18,18,1) 100%), url("${heroImage}")`,
-              }}
+              className="absolute inset-0"
+              style={{ background: 'linear-gradient(to bottom, rgba(18,18,18,0) 60%, rgba(18,18,18,1) 100%)' }}
             />
           </div>
         )}
