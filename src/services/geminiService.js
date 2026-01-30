@@ -1,26 +1,30 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+const PROXY_URL = '/api/gemini';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta';
+async function callGemini(contents, generationConfig) {
+  const response = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'gemini-3-pro-image-preview',
+      contents,
+      generationConfig,
+    }),
+  });
 
-if (!API_KEY) {
-  console.warn('Gemini API key not found. Please set VITE_GEMINI_API_KEY in .env file');
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error?.message || `API call failed: ${response.statusText}`);
+  }
+
+  return data;
 }
-
-const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
 
 /**
  * Generate storyboard from pet image
- * @param {File} imageFile - Uploaded pet image file
- * @returns {Promise<Object>} Storyboard data with frames
  */
 export async function generateStoryboard(imageFile, userStory = '', lang = 'en') {
-  if (!API_KEY) {
-    throw new Error('Gemini API is not initialized. Please check your API key.');
-  }
-
   try {
-    // Convert image file to base64
     const imageData = await fileToGenerativePart(imageFile);
 
     const storyContext = userStory
@@ -72,41 +76,11 @@ Respond ONLY in the following JSON format (no other text):
   ]
 }`;
 
-    // Use REST API with gemini-3-pro-image-preview model
-    const response = await fetch(
-      `${API_ENDPOINT}/models/gemini-3-pro-image-preview:generateContent?key=${API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                {
-                  text: prompt,
-                },
-                imageData,
-              ],
-            },
-          ],
-          generationConfig: {
-            responseModalities: ['TEXT'],
-          },
-        }),
-      }
+    const data = await callGemini(
+      [{ role: 'user', parts: [{ text: prompt }, imageData] }],
+      { responseModalities: ['TEXT'] }
     );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`API call failed: ${errorData.error?.message || response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    // Extract text from response
     const candidates = data.candidates;
     if (!candidates || candidates.length === 0) {
       throw new Error('No response received.');
@@ -122,17 +96,13 @@ Respond ONLY in the following JSON format (no other text):
       throw new Error('No text response found.');
     }
 
-    const text = textPart.text;
-
-    // Parse JSON response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const jsonMatch = textPart.text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
       throw new Error('No valid JSON response received.');
     }
 
     const storyboardData = JSON.parse(jsonMatch[0]);
 
-    // Validate response structure
     if (!storyboardData.frames || !Array.isArray(storyboardData.frames)) {
       throw new Error('Invalid storyboard frame data.');
     }
@@ -146,23 +116,14 @@ Respond ONLY in the following JSON format (no other text):
 
 /**
  * Convert file to Generative AI part
- * @param {File} file - Image file
- * @returns {Promise<Object>} Generative part object
  */
 async function fileToGenerativePart(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-
     reader.onloadend = () => {
       const base64Data = reader.result.split(',')[1];
-      resolve({
-        inlineData: {
-          data: base64Data,
-          mimeType: file.type,
-        },
-      });
+      resolve({ inlineData: { data: base64Data, mimeType: file.type } });
     };
-
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -170,17 +131,9 @@ async function fileToGenerativePart(file) {
 
 /**
  * Generate complete storyboard grid image (3x3 grid with 9 frames)
- * @param {File} referenceImage - Original pet image
- * @param {string} petName - Description of the pet
- * @returns {Promise<string>} Base64 encoded image data URL
  */
 export async function generateStoryboardGrid(referenceImage, petName = 'pet', userStory = '', frames = []) {
-  if (!API_KEY) {
-    throw new Error('Gemini API is not initialized. Please check your API key.');
-  }
-
   try {
-    // Convert reference image to base64
     const imageData = await fileToGenerativePart(referenceImage);
 
     let frameDescriptions;
@@ -237,44 +190,11 @@ Ultra high-quality animal photography with a DSLR look (Canon EOS R5 or Sony A7R
 OUTPUT:
 A clean 3×3 grid with no borders, no text, no captions, and no watermarks.`;
 
-    // Use REST API for image generation with reference image
-    const response = await fetch(
-      `${API_ENDPOINT}/models/gemini-3-pro-image-preview:generateContent?key=${API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                {
-                  text: prompt,
-                },
-                imageData,
-              ],
-            },
-          ],
-          generationConfig: {
-            responseModalities: ['IMAGE', 'TEXT'],
-            imageConfig: {
-              imageSize: '1K',
-            },
-          },
-        }),
-      }
+    const data = await callGemini(
+      [{ role: 'user', parts: [{ text: prompt }, imageData] }],
+      { responseModalities: ['IMAGE', 'TEXT'], imageConfig: { imageSize: '1K' } }
     );
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Image generation failed: ${errorData.error?.message || response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    // Extract image data from response
     const candidates = data.candidates;
     if (!candidates || candidates.length === 0) {
       throw new Error('No image generation result received.');
@@ -285,17 +205,13 @@ A clean 3×3 grid with no borders, no text, no captions, and no watermarks.`;
       throw new Error('Invalid response data.');
     }
 
-    // Find the image part
     const imagePart = parts.find((part) => part.inlineData);
     if (!imagePart || !imagePart.inlineData) {
       throw new Error('No generated image found.');
     }
 
-    // Convert to data URL
     const { data: base64Data, mimeType } = imagePart.inlineData;
-    const dataURL = `data:${mimeType};base64,${base64Data}`;
-
-    return dataURL;
+    return `data:${mimeType};base64,${base64Data}`;
   } catch (error) {
     console.error('Storyboard grid generation error:', error);
     throw new Error(`Storyboard grid generation failed: ${error.message}`);
@@ -303,119 +219,7 @@ A clean 3×3 grid with no borders, no text, no captions, and no watermarks.`;
 }
 
 /**
- * Generate image for a storyboard frame
- * @param {Object} frame - Storyboard frame with visual description
- * @param {string} petName - Description of the pet
- * @returns {Promise<string>} Base64 encoded image data URL
- */
-export async function generateFrameImage(frame, petName = 'pet') {
-  if (!API_KEY) {
-    throw new Error('Gemini API is not initialized. Please check your API key.');
-  }
-
-  try {
-    const frameDescriptions = {
-      1: 'Front-facing hero shot (Portrait). A classic studio portrait with the animal looking directly at the camera. Calm, confident, and engaging eye contact. Neutral studio background.',
-      2: 'Extreme close-up (Macro) focusing on the eyes or nose. Highlighting the texture of the wet nose or the depth of the iris. Sharp details, soft focus on the edges.',
-      3: 'Environmental shot. The animal sitting or lying comfortably in a cozy, stylish living room setting. Soft natural light coming from a window. Warm and homey atmosphere.',
-      4: 'Interaction shot. A human hand is gently petting the animal\'s head or shaking paws. The focus remains on the animal\'s happy or trusting reaction. Minimalist composition.',
-      5: 'High-angle shot (Top-down view). The camera looks straight down at the animal looking up with endearing eyes. Cute, symmetrical, and endearing perspective.',
-      6: 'Action shot. The animal in motion—catching a treat, running towards the camera, or jumping. Ears flapping, dynamic pose, frozen in time with a fast shutter speed.',
-      7: 'Detail shot focusing on a specific body part like the paw pads (beans), tail, or ear texture. Abstract and artistic composition emphasizing softness and fur detail.',
-      8: 'Profile silhouette or artistic lighting. The animal looking to the side, lit by a dramatic rim light or moody lighting. Editorial and sophisticated.',
-      9: 'Relaxed sleeping or resting shot. The animal curled up or stretched out on a soft cushion or rug. Peaceful, serene, and comfortable.',
-    };
-
-    const frameDescription = frameDescriptions[frame.frameNumber] || frameDescriptions[1];
-
-    const prompt = `Create a professional, high-quality pet photography storyboard frame.
-
-Pet: ${petName}
-Scene Title: ${frame.title}
-Visual Description: ${frame.visualDescription}
-Action: ${frame.action}
-
-Frame Style: ${frameDescription}
-
-Style requirements:
-- Ultra high-quality animal photography with a DSLR look (Canon EOS R5 or Sony A7R IV)
-- 85mm lens for portraits, 35mm for environmental shots
-- Soft, diffused lighting to highlight fur texture
-- Natural color palette (creams, browns, warm greys) that complements the animal's fur
-- Warm, cinematic, and professional feel
-- Controlled depth of field, precise lighting
-- Focus on the animal's expression, texture, and distinct personality
-
-Create a realistic, photographic image that matches this pet storyboard frame description.`;
-
-    // Use REST API for image generation
-    const response = await fetch(
-      `${API_ENDPOINT}/models/gemini-3-pro-image-preview:generateContent?key=${API_KEY}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                {
-                  text: prompt,
-                },
-              ],
-            },
-          ],
-          generationConfig: {
-            responseModalities: ['IMAGE', 'TEXT'],
-            imageConfig: {
-              imageSize: '1K',
-            },
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(`Image generation failed: ${errorData.error?.message || response.statusText}`);
-    }
-
-    const data = await response.json();
-
-    // Extract image data from response
-    const candidates = data.candidates;
-    if (!candidates || candidates.length === 0) {
-      throw new Error('No image generation result received.');
-    }
-
-    const parts = candidates[0]?.content?.parts;
-    if (!parts) {
-      throw new Error('Invalid response data.');
-    }
-
-    // Find the image part
-    const imagePart = parts.find((part) => part.inlineData);
-    if (!imagePart || !imagePart.inlineData) {
-      throw new Error('No generated image found.');
-    }
-
-    // Convert to data URL
-    const { data: base64Data, mimeType } = imagePart.inlineData;
-    const dataURL = `data:${mimeType};base64,${base64Data}`;
-
-    return dataURL;
-  } catch (error) {
-    console.error('Image generation error:', error);
-    throw new Error(`Image generation failed: ${error.message}`);
-  }
-}
-
-/**
  * Download base64 image as file
- * @param {string} dataURL - Base64 data URL
- * @param {string} filename - Filename for download
  */
 export function downloadImage(dataURL, filename) {
   const link = document.createElement('a');
