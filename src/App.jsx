@@ -5,9 +5,11 @@ import StoryInput from './components/StoryInput';
 import StoryboardDisplay from './components/StoryboardDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
 import { generateStoryboard, generateStoryboardGrid } from './services/geminiService';
+import { t } from './i18n';
 import './App.css';
 
 function App() {
+  const [lang, setLang] = useState('en');
   const [showLanding, setShowLanding] = useState(true);
   const [showStoryInput, setShowStoryInput] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
@@ -37,13 +39,13 @@ function App() {
     setError(null);
 
     try {
-      const result = await generateStoryboard(uploadedImage, story);
+      const result = await generateStoryboard(uploadedImage, story, lang);
       setStoryboard(result);
 
       const imageURL = await generateStoryboardGrid(uploadedImage, result.petName || 'pet', story, result.frames);
       setGridImage(imageURL);
     } catch (err) {
-      setError(err.message || 'An error occurred while generating the storyboard.');
+      setError(err.message || t(lang, 'errorTitle'));
       console.error('Generation error:', err);
     } finally {
       setLoading(false);
@@ -58,6 +60,7 @@ function App() {
     setStoryboard(null);
     setGridImage(null);
     setError(null);
+    setShowLanding(true);
   };
 
   const handleGetStarted = () => {
@@ -73,13 +76,13 @@ function App() {
     setError(null);
 
     try {
-      const result = await generateStoryboard(file, story);
+      const result = await generateStoryboard(file, story, lang);
       setStoryboard(result);
 
       const imageURL = await generateStoryboardGrid(file, result.petName || 'pet', story, result.frames);
       setGridImage(imageURL);
     } catch (err) {
-      setError(err.message || 'An error occurred while generating the storyboard.');
+      setError(err.message || t(lang, 'errorTitle'));
       console.error('Generation error:', err);
     } finally {
       setLoading(false);
@@ -88,7 +91,14 @@ function App() {
 
   // Show landing page
   if (showLanding) {
-    return <LandingPage onGetStarted={handleGetStarted} onStartWithData={handleStartWithData} />;
+    return (
+      <LandingPage
+        onGetStarted={handleGetStarted}
+        onStartWithData={handleStartWithData}
+        lang={lang}
+        onLangChange={setLang}
+      />
+    );
   }
 
   // Show story input
@@ -98,6 +108,7 @@ function App() {
         imagePreviewUrl={imagePreviewUrl}
         onSubmit={handleStorySubmit}
         onBack={() => setShowStoryInput(false)}
+        lang={lang}
       />
     );
   }
@@ -117,7 +128,7 @@ function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#121212] flex items-center justify-center">
-        <LoadingSpinner message="AI is analyzing your pet and generating a storyboard... (about 30-60 seconds)" />
+        <LoadingSpinner message={t(lang, 'loadingMessage')} />
       </div>
     );
   }
@@ -128,13 +139,13 @@ function App() {
       <div className="min-h-screen bg-[#121212] flex items-center justify-center px-6">
         <div className="max-w-sm w-full bg-white/5 rounded-2xl p-8 text-center border border-white/10">
           <span className="material-symbols-outlined text-red-400 text-5xl mb-4 block">error</span>
-          <h3 className="text-white text-lg font-bold mb-2">Something went wrong</h3>
+          <h3 className="text-white text-lg font-bold mb-2">{t(lang, 'errorTitle')}</h3>
           <p className="text-slate-400 text-sm mb-6">{error}</p>
           <button
             onClick={handleReset}
             className="px-8 py-3 rounded-full bg-[#ee9d2b] text-[#121212] font-bold text-sm shadow-lg shadow-[#ee9d2b]/20"
           >
-            Try Again
+            {t(lang, 'tryAgain')}
           </button>
         </div>
       </div>
@@ -149,6 +160,7 @@ function App() {
       originalFile={uploadedImage}
       gridImage={gridImage}
       onReset={handleReset}
+      lang={lang}
     />
   );
 }

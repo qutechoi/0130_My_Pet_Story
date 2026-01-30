@@ -14,7 +14,7 @@ const genAI = API_KEY ? new GoogleGenerativeAI(API_KEY) : null;
  * @param {File} imageFile - Uploaded pet image file
  * @returns {Promise<Object>} Storyboard data with frames
  */
-export async function generateStoryboard(imageFile, userStory = '') {
+export async function generateStoryboard(imageFile, userStory = '', lang = 'en') {
   if (!API_KEY) {
     throw new Error('Gemini API is not initialized. Please check your API key.');
   }
@@ -36,6 +36,10 @@ Frame 7: Detail shot of paws, tail, or ears
 Frame 8: Profile silhouette with dramatic lighting
 Frame 9: Relaxed sleeping or resting`;
 
+    const langInstruction = lang === 'ko'
+      ? `\n\nIMPORTANT: Write ALL text content (petName, title, visualDescription, action, dialogue, transition) in Korean (한국어). The entire response must be in Korean.`
+      : `\n\nIMPORTANT: Write ALL text content in English.`;
+
     const prompt = `You are a professional pet photography storyboard expert.
 Analyze the provided pet image and create an engaging 9-frame pet photography storyboard.
 
@@ -48,7 +52,7 @@ Each frame must include:
 4. Action/movement (what is happening in the frame)
 5. Mood or narration (emotional tone of the scene)
 6. Transition effect (how to move to the next frame)
-${storyContext}
+${storyContext}${langInstruction}
 
 Respond ONLY in the following JSON format (no other text):
 {
