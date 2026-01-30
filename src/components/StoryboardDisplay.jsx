@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import html2canvas from 'html2canvas';
 import { t } from '../i18n';
 
 function splitGridImage(gridImageSrc) {
@@ -30,6 +31,8 @@ function splitGridImage(gridImageSrc) {
 function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage, onReset, lang }) {
   const { storyTitle, petName, frames } = storyboard;
   const [frameImages, setFrameImages] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const contentRef = useRef(null);
 
   useEffect(() => {
     if (gridImage) {
@@ -37,50 +40,14 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
     }
   }, [gridImage]);
 
-  const gridToBlob = async () => {
-    if (!gridImage) return null;
-    const res = await fetch(gridImage);
-    return await res.blob();
-  };
-
-  const handleDownloadGrid = async () => {
-    const blob = await gridToBlob();
-    if (!blob) return;
-    const filename = `pet-storyboard-${petName || 'pet'}.png`;
-
-    // 모바일: share API로 저장 유도, 데스크톱: 직접 다운로드
-    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
-      try {
-        const file = new File([blob], filename, { type: 'image/png' });
-        await navigator.share({ files: [file] });
-      } catch (e) {
-        if (e.name !== 'AbortError') fallbackDownload(blob, filename);
-      }
-    } else {
-      fallbackDownload(blob, filename);
-    }
-  };
-
-  const handleShare = async () => {
-    const blob = await gridToBlob();
-    if (!blob) return;
-    const filename = `pet-storyboard-${petName || 'pet'}.png`;
-
-    if (navigator.share) {
-      try {
-        const file = new File([blob], filename, { type: 'image/png' });
-        await navigator.share({
-          title: displayTitle,
-          text: displayTitle,
-          files: [file],
-        });
-      } catch (e) {
-        // 사용자가 취소한 경우 무시
-      }
-    } else {
-      // share API 미지원 시 다운로드로 대체
-      fallbackDownload(blob, filename);
-    }
+  const captureContent = async () => {
+    if (!contentRef.current) return null;
+    const canvas = await html2canvas(contentRef.current, {
+      backgroundColor: '#121212',
+      scale: 2,
+      useCORS: true,
+    });
+    return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
   };
 
   const fallbackDownload = (blob, filename) => {
@@ -92,6 +59,54 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadGrid = async () => {
+    setSaving(true);
+    try {
+      const blob = await captureContent();
+      if (!blob) return;
+      const filename = `pet-storyboard-${petName || 'pet'}.png`;
+
+      if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
+        try {
+          const file = new File([blob], filename, { type: 'image/png' });
+          await navigator.share({ files: [file] });
+        } catch (e) {
+          if (e.name !== 'AbortError') fallbackDownload(blob, filename);
+        }
+      } else {
+        fallbackDownload(blob, filename);
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleShare = async () => {
+    setSaving(true);
+    try {
+      const blob = await captureContent();
+      if (!blob) return;
+      const filename = `pet-storyboard-${petName || 'pet'}.png`;
+
+      if (navigator.share) {
+        try {
+          const file = new File([blob], filename, { type: 'image/png' });
+          await navigator.share({
+            title: displayTitle,
+            text: displayTitle,
+            files: [file],
+          });
+        } catch (e) {
+          // 사용자가 취소한 경우 무시
+        }
+      } else {
+        fallbackDownload(blob, filename);
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const heroImage = gridImage || originalImage;
@@ -115,7 +130,7 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-1 overflow-y-auto pb-48" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div ref={contentRef} className="flex-1 overflow-y-auto pb-48" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {/* Hero: 3x3 Grid Image */}
         {heroImage && (
           <div className="w-full">
@@ -171,9 +186,10 @@ function StoryboardDisplay({ storyboard, originalImage, originalFile, gridImage,
           <div className="flex gap-3">
             <button
               onClick={handleDownloadGrid}
-              className="flex-1 flex items-center justify-center gap-2 rounded-full h-14 bg-white/10 text-white text-base font-bold border border-white/10"
+              disabled={saving}
+              className="flex-1 flex items-center justify-center gap-2 rounded-full h-14 bg-white/10 text-white text-base font-bold border border-white/10 disabled:opacity-50 cursor-pointer"
             >
-              <span className="material-symbols-outlined">download</span>
+              <span className="material-symbols-outlined">{saving ? 'hourglass_empty' : 'download'}</span>
               <span>{t(lang, 'saveStory')}</span>
             </button>
             <button
